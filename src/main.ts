@@ -9,6 +9,8 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Fuel Stations API')
     .setVersion(process.env.API_VERSION ?? 'API')
+    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
+    .addSecurityRequirements('api-key')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('doc', app, document);
