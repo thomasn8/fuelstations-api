@@ -35,7 +35,7 @@ export class StationsController {
 
   @Get(':id')
   public async findOne(@Param('id') id: string): Promise<Station> {
-    return this.stationsService.findOne(+id);
+    return this.stationsService.findOne(id);
   }
 
   @Patch(':id')
@@ -43,11 +43,11 @@ export class StationsController {
     @Param('id') id: string,
     @Body() updateStationDto: UpdateStationDto,
   ): Promise<Station> {
-    return this.stationsService.update(+id, updateStationDto);
+    return this.stationsService.update(id, updateStationDto);
   }
 
   @Delete(':id')
   public async remove(@Param('id') id: string): Promise<void> {
-    return this.stationsService.remove(+id);
+    return this.stationsService.remove(id);
   }
 }

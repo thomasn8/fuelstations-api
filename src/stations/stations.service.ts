@@ -1,49 +1,83 @@
-/* eslint-disable @typescript-eslint/require-await */
-
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
 import { Station } from './entities/station.entity';
+import { Pump } from './entities/pump.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class StationsService {
-  // In-memory storage for users — this data will be lost on server restart.
-  // Replace with database integration in the future.
-  private stations: Station[] = [];
+  public constructor(
+    @InjectRepository(Station)
+    private readonly stationRepository: Repository<Station>,
+    @InjectRepository(Pump)
+    private readonly pumpRepository: Repository<Pump>,
+  ) {}
 
   public async create(createStationDto: CreateStationDto): Promise<Station> {
-    this.stations.push(createStationDto);
-    return createStationDto as Station;
+    if (await this.isConflict(createStationDto)) throw new ConflictException();
+    return await this.stationRepository.save(
+      this.stationRepository.create(createStationDto),
+    );
   }
 
   public async findAll(): Promise<Station[]> {
-    return this.stations;
+    return this.stationRepository.find();
   }
 
-  public async findOne(id: number): Promise<Station> {
-    const station = this.stations.at(id);
-    if (!station) throw new NotFoundException();
+  public async findOne(id: string): Promise<Station> {
+    const station = await this.stationRepository.findOneBy({
+      id: id,
+    });
+    if (station === null) throw new NotFoundException();
     return station;
   }
 
   public async update(
-    id: number,
+    id: string,
     updateStationDto: UpdateStationDto,
   ): Promise<Station> {
-    const station = this.stations.at(id);
-    if (!station) throw new NotFoundException();
+    const station = await this.findOne(id);
+    if (await this.isConflict(updateStationDto)) throw new ConflictException();
     if (updateStationDto.name) station.name = updateStationDto.name;
-    if (updateStationDto.pumps.length) {
-      updateStationDto.pumps.forEach(
-        (pump) => (station.pumps[pump.id].price = pump.price),
-      );
+    if (updateStationDto.pumps != undefined) {
+      if (updateStationDto.pumps.length < 1) throw new BadRequestException();
+      updateStationDto.pumps.forEach((updatePumpDto) => {
+        const pump = station.pumps.find((pump) => pump.id === updatePumpDto.id);
+        if (pump === undefined) throw new BadRequestException();
+        pump.price = updatePumpDto.price;
+      });
     }
-    return this.stations[id];
+
+    return await this.stationRepository.save(station);
   }
 
-  public async remove(id: number): Promise<void> {
-    if (id > -1 && id < this.stations.length) {
-      this.stations.splice(id, 1);
+  public async remove(id: string): Promise<void> {
+    const station = await this.findOne(id);
+    for (const pump of station.pumps) {
+      await this.pumpRepository.delete(pump.id);
     }
+    await this.stationRepository.delete(station.id);
+  }
+
+  private async isConflict(
+    dto: CreateStationDto | UpdateStationDto,
+  ): Promise<boolean> {
+    const whereCondition: any[] = [{ name: dto.name }];
+    if (dto instanceof CreateStationDto) {
+      whereCondition.push({
+        address: dto.address,
+      });
+    }
+    const station = await this.stationRepository.findOne({
+      where: whereCondition,
+    });
+    return station !== null;
   }
 }
