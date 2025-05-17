@@ -6,14 +6,16 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.setGlobalPrefix('api.fuelstations/v1');
+
   const config = new DocumentBuilder()
     .setTitle('Fuel Stations API')
-    .setVersion(process.env.API_VERSION ?? 'API')
+    .setVersion(process.env.API_VERSION ?? 'v1')
     .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
     .addSecurityRequirements('api-key')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('doc', app, document);
+  SwaggerModule.setup('doc', app, document, { useGlobalPrefix: true });
 
   app.enableCors();
   app.useGlobalPipes(
