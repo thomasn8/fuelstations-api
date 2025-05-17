@@ -1,6 +1,35 @@
 # FUEL STATIONS API
 
-## Swagger documentation
-You can have a look to the API Swagger documentation at:
-- [http://localhost:3000/doc](http://localhost:3000/doc)
-- [https://localhost:8443/api.fuelstations/v1/doc/](https://localhost:8443/api.fuelstations/v1/doc/)
+## Prerequisites
+
+Node.js (v22.12 recommended)
+
+Using nvm:
+```bash
+nvm install 22.12
+nvm use 22.12
+```
+
+## Quick Start
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Run in development mode:
+```bash
+npm run start:dev
+```
+
+## API Documentation (Swagger)
+
+Access the Swagger documentation at:
+
+http://localhost:3000/api.fuelstations/v1/doc
+
+## Authentication
+
+Set the following header:
+
+`x-api-key: my-incredible-secret-key`
