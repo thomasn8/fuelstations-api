@@ -1,9 +1,9 @@
 import { Pump } from './pump.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'stations' })
 export class Station {
-  @PrimaryGeneratedColumn('uuid') // TODO: concat the name (first word) with a number (the lenght of the stations + 1)
+  @PrimaryColumn()
   id: string;
 
   @Column({ unique: true })

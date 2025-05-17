@@ -22,9 +22,9 @@ export class StationsService {
 
   public async create(createStationDto: CreateStationDto): Promise<Station> {
     if (await this.isConflict(createStationDto)) throw new ConflictException();
-    return await this.stationRepository.save(
-      this.stationRepository.create(createStationDto),
-    );
+    const newStation = this.stationRepository.create(createStationDto);
+    newStation.id = await this.createCustomId(createStationDto);
+    return await this.stationRepository.save(newStation);
   }
 
   public async findAll(): Promise<Station[]> {
@@ -79,5 +79,13 @@ export class StationsService {
       where: whereCondition,
     });
     return station !== null;
+  }
+
+  private async createCustomId(
+    createStationDto: CreateStationDto,
+  ): Promise<string> {
+    const stationCount = await this.stationRepository.count();
+    const firstWordOfName = createStationDto.name.split(' ')[0].toUpperCase();
+    return `${firstWordOfName}_${stationCount + 100001}`;
   }
 }
