@@ -86,6 +86,6 @@ export class StationsService {
   ): Promise<string> {
     const stationCount = await this.stationRepository.count();
     const firstWordOfName = createStationDto.name.split(' ')[0].toUpperCase();
-    return `${firstWordOfName}_${stationCount + 100001}`;
+    return `${firstWordOfName}_${stationCount + 100000}`;
   }
 }
