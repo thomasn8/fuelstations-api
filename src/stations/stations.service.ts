@@ -21,7 +21,9 @@ export class StationsService {
   ) {}
 
   public async create(createStationDto: CreateStationDto): Promise<Station> {
-    if (await this.isConflict(createStationDto)) throw new ConflictException();
+    if (await this.isCreateConflict(createStationDto)) {
+      throw new ConflictException();
+    }
     const newStation = this.stationRepository.create(createStationDto);
     newStation.id = await this.createCustomId(createStationDto);
     return await this.stationRepository.save(newStation);
@@ -44,7 +46,9 @@ export class StationsService {
     updateStationDto: UpdateStationDto,
   ): Promise<Station> {
     const station = await this.findOne(id);
-    if (await this.isConflict(updateStationDto)) throw new ConflictException();
+    if (await this.isUpdateConflict(updateStationDto, id)) {
+      throw new ConflictException();
+    }
     if (updateStationDto.name) station.name = updateStationDto.name;
     if (updateStationDto.pumps != undefined) {
       if (updateStationDto.pumps.length < 1) throw new BadRequestException();
@@ -66,19 +70,24 @@ export class StationsService {
     await this.stationRepository.delete(station.id);
   }
 
-  private async isConflict(
-    dto: CreateStationDto | UpdateStationDto,
-  ): Promise<boolean> {
-    const whereCondition: any[] = [{ name: dto.name }];
-    if (dto instanceof CreateStationDto) {
-      whereCondition.push({
-        address: dto.address,
-      });
-    }
+  private async isCreateConflict(dto: CreateStationDto): Promise<boolean> {
+    const whereCondition = [{ name: dto.name }, { address: dto.address }];
     const station = await this.stationRepository.findOne({
       where: whereCondition,
     });
     return station !== null;
+  }
+
+  private async isUpdateConflict(
+    dto: UpdateStationDto,
+    ignoredId: string,
+  ): Promise<boolean> {
+    if (dto.name === undefined) return false;
+    const whereCondition = [{ name: dto.name }];
+    const station = await this.stationRepository.findOne({
+      where: whereCondition,
+    });
+    return !(station === null || station.id === ignoredId);
   }
 
   private async createCustomId(
